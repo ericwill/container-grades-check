@@ -1,0 +1,23 @@
+name: Daily 3AM Container Grade Check and Publish
+on:
+  schedule:
+    - cron: '0 3 * * 1-5'
+  workflow_dispatch: # Allows you to also trigger it manually
+
+jobs:
+  your_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Run Script
+        env:
+          DEV_SPACES_WORKFLOW_HOOK: ${{ secrets.DEV_SPACES_WORKFLOW_HOOK }}
+          DWO_WTO_WORKFLOW_HOOK: ${{ secrets.DWO_WTO_WORKFLOW_HOOK }}
+        run: python check_container_grades.py
