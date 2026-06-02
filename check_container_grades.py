@@ -67,8 +67,9 @@ print("Publishing of Dev Spaces container grades returned ", r.status_code)
 
 # Fetch DWO/WTO container grades
 dwo_final_grades = fetch_container_grades("devworkspace", BASE_URL, DWO_CONTAINER_LIST)
-wto_final_grades = fetch_container_grades("web-terminal", BASE_URL, WTO_CONTAINER_LIST, None)
-merged_dwo_wto_grades = dwo_final_grades | wto_final_grades
+# wto_final_grades = fetch_container_grades("web-terminal", BASE_URL, WTO_CONTAINER_LIST, None)
+# merged_dwo_wto_grades = dwo_final_grades | wto_final_grades
+merged_dwo_wto_grades = dwo_final_grades
 
 # Publish DWO/WTO container grades
 slack_json = json.dumps(merged_dwo_wto_grades)
