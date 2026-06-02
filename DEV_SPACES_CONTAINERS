@@ -1,0 +1,15 @@
+code-rhel9
+code-sshd-rhel9
+configbump-rhel9
+dashboard-rhel9
+imagepuller-rhel9
+jetbrains-ide-rhel9
+devspaces-rhel9-operator
+devspaces-operator-bundle
+pluginregistry-rhel9
+server-rhel9
+traefik-rhel9
+openvsx-rhel9
+udi-base-rhel9
+multicluster-redirector-rhel9
+udi-rhel9
