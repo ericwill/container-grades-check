@@ -2,6 +2,7 @@ import requests
 from dateutil import parser
 import json
 import os
+from packaging.version import Version
 
 DEV_SPACES_CONTAINER_LIST = []
 
@@ -10,7 +11,7 @@ WTO_CONTAINER_LIST = []
 
 BASE_URL = "https://catalog.redhat.com/api/containers/v1/repositories/registry/registry.access.redhat.com/repository/{0}%2F{1}/grades"
 
-def fetch_container_grades(project, base_url, container_list, tag="latest"):
+def fetch_container_grades(project, base_url, container_list, wto=False):
     container_grade_dict = {}
     for container in container_list:
         current_url = base_url.format(project, container)
@@ -19,18 +20,28 @@ def fetch_container_grades(project, base_url, container_list, tag="latest"):
             print("Fetched grades for", container)
             raw_data = response.json()
             this_container_string = ""
-            if tag == None:
-                selected_entry = raw_data[0]
-            for entry in raw_data:
-                if entry["tag"] == "latest":
-                    selected_entry = entry
-                    break
-            if "next_drop_date" in selected_entry:
-                next_drop_pretty = parser.parse(selected_entry["next_drop_date"]).date()
-                this_container_string += selected_entry["current_grade"] + ", next grade drop is " + next_drop_pretty.strftime("%d/%m/%Y")
+            if wto:
+                tag_list = []
+                for entry in raw_data:
+                    if len(entry["tag"]) <= 5:
+                        tag_list.append(entry["tag"])
+                tag_list.sort(key=Version)
+                tag_list = tag_list[-6:]
+                for tag in tag_list:
+                    for entry in raw_data:
+                        if entry["tag"] == tag:
+                            this_container_string += entry["tag"] + ": " + entry["current_grade"] + ", "
+                container_grade_dict[container] = this_container_string.rstrip(", ")
             else:
-                this_container_string += selected_entry["current_grade"]
-            container_grade_dict[container] = this_container_string
+                for entry in raw_data:
+                    if entry["tag"] == "latest": 
+                        if "next_drop_date" in entry:
+                            next_drop_pretty = parser.parse(entry["next_drop_date"]).date()
+                            this_container_string += entry["current_grade"] + ", next grade drop is " + next_drop_pretty.strftime("%d/%m/%Y")
+                        else:
+                            this_container_string += entry["current_grade"]
+                        break
+                container_grade_dict[container] = this_container_string
         else:
             container_grade_dict[container] = "Error parsing container grade."
     return container_grade_dict
@@ -67,9 +78,8 @@ print("Publishing of Dev Spaces container grades returned ", r.status_code)
 
 # Fetch DWO/WTO container grades
 dwo_final_grades = fetch_container_grades("devworkspace", BASE_URL, DWO_CONTAINER_LIST)
-# wto_final_grades = fetch_container_grades("web-terminal", BASE_URL, WTO_CONTAINER_LIST, None)
-# merged_dwo_wto_grades = dwo_final_grades | wto_final_grades
-merged_dwo_wto_grades = dwo_final_grades
+wto_final_grades = fetch_container_grades("web-terminal", BASE_URL, WTO_CONTAINER_LIST, True)
+merged_dwo_wto_grades = dwo_final_grades | wto_final_grades
 
 # Publish DWO/WTO container grades
 slack_json = json.dumps(merged_dwo_wto_grades)
