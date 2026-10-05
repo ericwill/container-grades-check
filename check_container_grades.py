@@ -26,11 +26,15 @@ def fetch_container_grades(project, base_url, container_list, wto=False):
                     if len(entry["tag"]) <= 5:
                         tag_list.append(entry["tag"])
                 tag_list.sort(key=Version)
-                tag_list = tag_list[-6:]
+                if '1.12' in tag_list:
+                    tag_list.remove('1.12')
+                min_version = Version('1.11')
                 for tag in tag_list:
-                    for entry in raw_data:
-                        if entry["tag"] == tag:
-                            this_container_string += entry["tag"] + ": " + entry["current_grade"] + ", "
+                    current_version = Version(tag)
+                    if current_version >= min_version:
+                        for entry in raw_data:
+                            if entry["tag"] == tag:
+                                this_container_string += entry["tag"] + ": " + entry["current_grade"] + ", "
                 container_grade_dict[container] = this_container_string.rstrip(", ")
             else:
                 for entry in raw_data:
