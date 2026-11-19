@@ -1,0 +1,19 @@
+name: Report New Issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  label-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Send the necessary information to Slack
+      env:
+        WEBHOOK_URL: ${{ secrets.ECLIPSE_CHE_ISSUE_TRIAGE_WEBHOOK }}
+      run: |
+        URL=${{ github.event.issue.html_url }}
+        AUTHOR=${{ github.event.issue.user.login }}
+        TITLE="github.event.issue.title"
+        curl --json '{"title":$TITLE, "author": $AUTHOR, "url": $URL}' $WEBHOOK_URL
