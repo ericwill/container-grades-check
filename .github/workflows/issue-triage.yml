@@ -1,0 +1,22 @@
+name: Report New Issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  label-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Send the necessary information to Slack
+      env:
+        WEBHOOK_URL: ${{ secrets.ECLIPSE_CHE_ISSUE_TRIAGE_WEBHOOK }}
+        GH_URL: ${{ github.event.issue.html_url }}
+        GH_AUTHOR: ${{ github.event.issue.user.login }}
+        GH_TITLE: ${{ github.event.issue.title }}
+        GH_LABELS: ${{ join(github.event.issue.labels.*.name, ', ') || 'N/A' }}
+      run: |
+        JSON=$(jq -n --arg url "$GH_URL" --arg author "$GH_AUTHOR" --arg title "$GH_TITLE" --arg labels "$GH_LABELS" \
+          '{url: $url, author: $author, title: $title, labels: $labels}')
+        curl -H "Content-Type: application/json" -d "$JSON" $WEBHOOK_URL
